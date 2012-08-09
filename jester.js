@@ -421,7 +421,7 @@
                 midpointY = mpY / numTouches;
 
                 prevScale = scale;
-                scale = event.scale;
+                scale = event.scale || scaleHelper(event);
                 deltaScale = scale - prevScale;
             }
             
