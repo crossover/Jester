@@ -274,12 +274,17 @@
 
             var touches;
             var previousTapTime = 0;
+            var lastTouches = 0;
 
             var touchStart = function(evt) {
-                touches = new Jester.TouchGroup(evt);
+            	// avoid that multiple touchstart events on Android devices 
+            	// confuse the gesture detection.
+            	if ( lastTouches < evt.touches.length ) {
+            	    lastTouches = evt.touches.length;
+                    touches = new Jester.TouchGroup(evt);
 
-                eventSet.execute("start", touches, evt);
-
+                    eventSet.execute("start", touches, evt);
+		}
                 if(opts.preventDefault) evt.preventDefault();
                 if(opts.stopPropagation) evt.stopPropagation();
             };
@@ -308,6 +313,7 @@
             var touchEnd = function(evt) {
 
                 eventSet.execute("end", touches, evt);
+                lastTouches = 0; // for Android, can be always set to 0. 
 
                 if(opts.preventDefault) evt.preventDefault();
                 if(opts.stopPropagation) evt.stopPropagation();
