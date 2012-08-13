@@ -277,14 +277,14 @@
             var lastTouches = 0;
 
             var touchStart = function(evt) {
-            	// avoid that multiple touchstart events on Android devices 
-            	// confuse the gesture detection.
-            	if ( lastTouches < evt.touches.length ) {
-            	    lastTouches = evt.touches.length;
+                // avoid that multiple touchstart events on Android devices 
+                // confuse the gesture detection.
+                if ( lastTouches < evt.touches.length ) {
+                    lastTouches = evt.touches.length;
                     touches = new Jester.TouchGroup(evt);
 
                     eventSet.execute("start", touches, evt);
-		}
+                }
                 if(opts.preventDefault) evt.preventDefault();
                 if(opts.stopPropagation) evt.stopPropagation();
             };
@@ -431,56 +431,55 @@
                 deltaScale = scale - prevScale;
             }
             
-            /* Android devices do not automatically calculate the
-             * scale of the touches in a gesture, while iOS does
-	         * so. This function mimics the iphone behavior.
-	         */
+            // Android devices do not automatically calculate the
+            // scale of the touches in a gesture, while iOS does
+            // so. This function mimics the iphone behavior.
+            //
+            // helper functions of calculating the missing scale on android devices
+            function sizeCalc(touchList) {
+                var _size = 0;
+                if ( touchList && touchList.length > 1 ) {
+                    var minX = touchList[0].pageX, 
+                    maxX = touchList[0].pageX, 
+                    minY = touchList[0].pageY, 
+                    maxY = touchList[0].pageY;
+                    for ( var i = 0; i < touchList.length; i++ ) {
+                        if ( touchList[i].pageX < minX )
+                            minX = touchList[i].pageX;
+                        if ( touchList[i].pageY < minY )
+                            minY = touchList[i].pageY;
+                        if ( touchList[i].pageX > maxX ) 
+                            maxX = touchList[i].pageX;
+                        if ( touchList[i].pageY > maxY )
+                            maxY = touchList[i].pageY;
+                    }
+                    _size = (maxY-minY) * (maxX-minX);
+                }
+                return _size;
+            }
 
-	        // helper functions of calculating the missing scale on android devices
-	        function sizeCalc(touchList) {
-		        var _size = 0;
-		        if ( touchList && touchList.length > 1 ) {
-		            var minX = touchList[0].pageX, 
-		                maxX = touchList[0].pageX, 
-		                minY = touchList[0].pageY, 
-		                maxY = touchList[0].pageY;
-		            for ( var i = 0; i < touchList.length; i++ ) {
-			            if ( touchList[i].pageX < minX )
-			                minX = touchList[i].pageX;
-			            if ( touchList[i].pageY < minY )
-			                minY = touchList[i].pageY;
-			            if ( touchList[i].pageX > maxX ) 
-			                maxX = touchList[i].pageX;
-			            if ( touchList[i].pageY > maxY )
-			                maxY = touchList[i].pageY;
-		            }
-		            _size = (maxY-minY) * (maxX-minX);
-		        }
-		        return _size;
-	        }
+            function scaleHelper(event) {
+                // this calculates the scale changes by the convex hull (rect).
+                var _delta = 1.0;
 
-	        function scaleHelper(event) {
-		        // this calculates the scale changes by the convex hull (rect).
-		        var _delta = 1.0;
-
-		        if ( prevTouches && prevTouches.length) {
-		            if ( prevTouches.delta && event.touches.length > 1 ) {
-			            var dl = sizeCalc( event.touches ); 
-			            _delta =  dl/prevTouches.delta;
-		            }
-		        }
-		        else {
-		            // the gesture delta needs to get calculated only
-		            // when a gesture is started
-		            prevTouches = event.touches; 
-		            if ( prevTouches && prevTouches.length > 1 ) {
-			            var dl = sizeCalc( prevTouches ); 
-			            prevTouches.delta = dl;
-		            }
-	    	    }
-		        // return default (nothing  changed)
-		        return _delta;
-	        }
+                if ( prevTouches && prevTouches.length) {
+                    if ( prevTouches.delta && event.touches.length > 1 ) {
+                        var dl = sizeCalc( event.touches ); 
+                        _delta =  dl/prevTouches.delta;
+                    }
+                }
+                else {
+                    // the gesture delta needs to get calculated only
+                    // when a gesture is started
+                    prevTouches = event.touches; 
+                    if ( prevTouches && prevTouches.length > 1 ) {
+                        var dl = sizeCalc( prevTouches ); 
+                        prevTouches.delta = dl;
+                    }
+                }
+                // return default (nothing  changed)
+                return _delta;
+            }
 
 
             return {
