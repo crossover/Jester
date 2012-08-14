@@ -279,10 +279,12 @@
             var touchStart = function(evt) {
                 // avoid that multiple touchstart events on Android devices 
                 // confuse the gesture detection.
-                if ( lastTouches < evt.touches.length ) {
+		if ( lastTouches < evt.touches.length ) {
                     lastTouches = evt.touches.length;
+	      	   
                     touches = new Jester.TouchGroup(evt);
-
+		    previousTapTime = (new Date()).getTime();
+		    
                     eventSet.execute("start", touches, evt);
                 }
                 if(opts.preventDefault) evt.preventDefault();
@@ -311,47 +313,49 @@
             };
 
             var touchEnd = function(evt) {
-
                 eventSet.execute("end", touches, evt);
-                lastTouches = 0; // for Android, can be always set to 0. 
 
                 if(opts.preventDefault) evt.preventDefault();
                 if(opts.stopPropagation) evt.stopPropagation();
 
-                if(touches.numTouches() == 1) {
-                    // tap
-                    if(touches.touch(0).total.x() <= opts.tapDistance && touches.touch(0).total.y() <= opts.tapDistance && touches.touch(0).total.time() < opts.tapTime) {
-                        eventSet.execute("tap", touches);
-                    }
-    
-                    // doubletap
-                    if(touches.touch(0).total.time() < opts.tapTime) {
-                        var now = (new Date()).getTime();
-                        if(now - previousTapTime <= opts.doubleTapTime) {
-                            eventSet.execute("doubletap", touches);
+                if ( lastTouches > 0 ) {
+                    if(touches.numTouches() == 1) {
+                        // tap
+                        if(touches.touch(0).total.x() <= opts.tapDistance && touches.touch(0).total.y() <= opts.tapDistance && touches.touch(0).total.time() < opts.tapTime) {
+                            eventSet.execute("tap", touches);
                         }
-                        previousTapTime = now;
+                        
+                        // swipe
+                        if(Math.abs(touches.touch(0).total.x()) >= opts.swipeDistance) {
+                            var swipeDirection = touches.touch(0).total.x() < 0 ? "left" : "right";
+                            eventSet.execute("swipe", touches, swipeDirection);
+                        }
+                        // flick
+                        if(Math.abs(touches.touch(0).total.x()) >= opts.flickDistance && touches.touch(0).total.time() <= opts.flickTime) {
+                            var flickDirection = touches.touch(0).total.x() < 0 ? "left" : "right";
+                            eventSet.execute("flick", touches, flickDirection);
+                        }
                     }
+                    else if(touches.numTouches() == 2) {
 
-                    // swipe
-                    if(Math.abs(touches.touch(0).total.x()) >= opts.swipeDistance) {
-                        var swipeDirection = touches.touch(0).total.x() < 0 ? "left" : "right";
-                        eventSet.execute("swipe", touches, swipeDirection);
-                    }
+                        // doubletap
+                        if(touches.touch(0).total.time() < opts.tapTime) {
+                            var now = (new Date()).getTime();
 
-                    // flick
-                    if(Math.abs(touches.touch(0).total.x()) >= opts.flickDistance && touches.touch(0).total.time() <= opts.flickTime) {
-                        var flickDirection = touches.touch(0).total.x() < 0 ? "left" : "right";
-                        eventSet.execute("flick", touches, flickDirection);
+                            if(now - previousTapTime <= opts.doubleTapTime) {
+                                eventSet.execute("doubletap", touches);
+                            }
+                            previousTapTime = now;
+                        }
+
+                        // pinchend
+                        if(touches.current.scale() !== 1.0) {
+                            var pinchDirection = touches.current.scale() < 1.0 ? "narrowed" : "widened";
+                            eventSet.execute("pinchend", touches, pinchDirection);
+                        }
                     }
                 }
-                else if(touches.numTouches() == 2) {
-                    // pinchend
-                    if(touches.current.scale() !== 1.0) {
-                        var pinchDirection = touches.current.scale() < 1.0 ? "narrowed" : "widened";
-                        eventSet.execute("pinchend", touches, pinchDirection);
-                    }
-                }
+                lastTouches = 0; // for Android, can be always set to 0. 
             };
 
             var stopListening = function() {
