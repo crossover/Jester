@@ -279,12 +279,12 @@
             var touchStart = function(evt) {
                 // avoid that multiple touchstart events on Android devices 
                 // confuse the gesture detection.
-		if ( lastTouches < evt.touches.length ) {
+                if ( lastTouches < evt.touches.length ) {
                     lastTouches = evt.touches.length;
-	      	   
+                   
                     touches = new Jester.TouchGroup(evt);
-		    previousTapTime = (new Date()).getTime();
-		    
+                    previousTapTime = (new Date()).getTime();
+                    
                     eventSet.execute("start", touches, evt);
                 }
                 if(opts.preventDefault) evt.preventDefault();
