@@ -282,10 +282,10 @@
                 if ( lastTouches < evt.touches.length ) {
                     lastTouches = evt.touches.length;
                    
-                    touches = new Jester.TouchGroup(evt);
-                    previousTapTime = (new Date()).getTime();
-                    
+                    touches = new Jester.TouchGroup(evt);                    
                     eventSet.execute("start", touches, evt);
+
+                    previousTapTime = (new Date()).getTime();
                 }
                 if(opts.preventDefault) evt.preventDefault();
                 if(opts.stopPropagation) evt.stopPropagation();
@@ -347,7 +347,7 @@
                             }
                             previousTapTime = now;
                         }
-
+                        
                         // pinchend
                         if(touches.current.scale() !== 1.0) {
                             var pinchDirection = touches.current.scale() < 1.0 ? "narrowed" : "widened";
