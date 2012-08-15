@@ -424,6 +424,7 @@
             }
 
             var touchEnd = function(evt) {
+                touches.update(evt);
                 eventSet.execute("end", touches, evt);
 
                 if(opts.preventDefault) evt.preventDefault();
@@ -512,6 +513,11 @@
                 prevScale = scale;
                 scale = event.scale || scaleHelper(event);
                 deltaScale = scale - prevScale;
+                that.event = event;
+            }
+            
+            function stopPropagation() {
+                this.event.stopPropagation();
             }
             
             // Android devices do not automatically calculate the
@@ -576,6 +582,8 @@
                 delta: {
                     scale: getDeltaScale
                 },
+                event: event,
+                stopPropagation: stopPropagation,
                 update: updateTouches
             };
         },
