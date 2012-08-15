@@ -39,7 +39,7 @@
             var that = this,
                 cacheId = Jester.cacheId,
                 cache = Jester.cache,
-                gestures = "swipe flick tap doubletap pinchnarrow pinchwiden pinchend";
+                gestures = "swipe flick tap twintap taplong twintaplong doubletap pinchnarrow pinchwiden pinchend pinched stretched";
 
             if(!element || !element.nodeType) {
                 throw new TypeError("Jester: no element given.");
@@ -255,11 +255,14 @@
 
             opts.tapDistance    = opts.tapDistance          ||    0;
             opts.tapTime        = opts.tapTime              ||    20;
+            opts.tapLongTime    = opts.tapLongTime          ||    1000;
 
             opts.doubleTapTime  = opts.doubleTapTime        ||    300;
 
+            opts.avoidSwipe     = opts.avoidSwipt           ||    false;
             opts.swipeDistance  = opts.swipeDistance        ||    200;
 
+            opts.avoidFlick     = opts.avoidFlick           ||    false;
             opts.flickTime      = opts.flickTime            ||    300;
             opts.flickDistance  = opts.flickDistance        ||    200;
 
@@ -267,13 +270,16 @@
             opts.deadY          = opts.deadY                ||    0;
 
             if(opts.capture !== false) opts.capture = true;
-            if(typeof opts.preventDefault !== "undefined" && opts.preventDefault !== false) opts.preventDefault = true;
-            if(typeof opts.preventDefault !== "undefined" && opts.stopPropagation !== false) opts.stopPropagation = true;
+            if(typeof opts.preventDefault !== "undefined" && 
+               opts.preventDefault !== false) opts.preventDefault = true;
+            if(typeof opts.preventDefault !== "undefined" && 
+               opts.stopPropagation !== false) opts.stopPropagation = true;
 
             var eventSet = elementCache.eventSet;
 
             var touches;
             var previousTapTime = 0;
+            var previousNumTouches = 0;
             var lastTouches = 0;
 
             var touchStart = function(evt) {
@@ -312,6 +318,111 @@
                 }
             };
 
+            function detectTap() {
+                var nTouch = touches.numTouches();
+                var eTouch = true;
+                for(var i = 0; i < nTouch; i++ ) {
+                    if(!(touches.touch(i).total.x() <= opts.tapDistance && 
+                         touches.touch(i).total.y() <= opts.tapDistance)) {
+                        eTouch = false;
+                        break; 
+                    }
+                }
+                if (eTouch) {
+                    if (touches.touch(0).total.time() < opts.tapTime) {
+                        switch (nTouch) {
+                        case 1:
+                            eventSet.execute("tap", touches);
+                            break;
+                        case 2:
+                            eventSet.execute("twintap", touches);
+                            break
+                        default: 
+                            // event for multitaps
+                            break;
+                        }
+                        
+                        // double tap
+                        var now = (new Date()).getTime();
+                        if((previousNumTouches == nTouch) &&
+                           ((now - previousTapTime) <= opts.doubleTapTime)) {
+                            eventSet.execute("doubletap", touches);
+
+                            // the next tap must not trigger a double tap anymore
+                            previousNumTouches = 0;
+                            previousTapTime  = 0;
+
+                        }
+                        else { 
+                            // if a tap was detected but not triggered
+                            // a double tap then we need to initialize
+                            // the timer
+                            previousNumTouches = nTouch;
+                            previousTapTime  = now;
+                        }
+                    }
+                    if ( touches.touch(0).total.time() >= opts.tapLongTime ) {
+                        switch (nTouch) {
+                        case 1:
+                            eventSet.execute("taplong", touches);
+                            break;
+                        case 2:
+                            eventSet.execute("twintaplong", touches);
+                            break
+                        default: 
+                            // event for multitaps
+                            break;
+                        }
+                        // the next tap must not trigger a double tap anymore
+                        previousNumTouches = 0;
+                        previousTapTime  = 0;
+                    }
+                }
+                else {
+                    // if no tap was detected then the next tap
+                    // will not trigger a double tap
+                    previousNumTouches = 0;
+                    previousTapTime  = 0;
+                }
+            }
+
+            function detectSwipeFlick() {
+                var nTouch = touches.numTouches();
+                if (nTouch == 1) {
+                    var totalX   = touches.touch(0).total.x();
+                    var distance = Math.abs(totalX);
+                    var eventname;
+
+                    if (!opts.avoidSwipe &&
+                        distance >= opts.swipeDistance) {
+                        eventname = "swipe";
+                    }
+                    if (!opts.avoidFlick &&
+                        distance >= opts.flickDistance && 
+                        touches.touch(0).total.time() <= opts.flickTime) {
+                        eventname = "flick";
+                    }
+
+                    if (eventname) {
+                        eventSet.execute(eventname, touches, totalX < 0 ? "left" : "right");
+                    }
+                }
+            }
+
+            function detectPinch() {
+                if (touches.numTouches() == 2 &&
+                    touches.current.scale() !== 1.0){
+                    var pinchDirection = touches.current.scale() < 1.0 ? "narrowed" : "widened";
+                    eventSet.execute("pinchend", touches, pinchDirection);
+                    if (pinchDirection == "narrowed") {
+                        eventSet.execute("pinched", touches);
+                    }
+                    else {
+                        eventSet.execute("stretched", touches);
+                    }
+                }
+            }
+
             var touchEnd = function(evt) {
                 eventSet.execute("end", touches, evt);
 
@@ -319,41 +430,9 @@
                 if(opts.stopPropagation) evt.stopPropagation();
 
                 if ( lastTouches > 0 ) {
-                    if(touches.numTouches() == 1) {
-                        // tap
-                        if(touches.touch(0).total.x() <= opts.tapDistance && touches.touch(0).total.y() <= opts.tapDistance && touches.touch(0).total.time() < opts.tapTime) {
-                            eventSet.execute("tap", touches);
-                        }
-                        
-                        // swipe
-                        if(Math.abs(touches.touch(0).total.x()) >= opts.swipeDistance) {
-                            var swipeDirection = touches.touch(0).total.x() < 0 ? "left" : "right";
-                            eventSet.execute("swipe", touches, swipeDirection);
-                        }
-                        // flick
-                        if(Math.abs(touches.touch(0).total.x()) >= opts.flickDistance && touches.touch(0).total.time() <= opts.flickTime) {
-                            var flickDirection = touches.touch(0).total.x() < 0 ? "left" : "right";
-                            eventSet.execute("flick", touches, flickDirection);
-                        }
-                    }
-                    else if(touches.numTouches() == 2) {
-
-                        // doubletap
-                        if(touches.touch(0).total.time() < opts.tapTime) {
-                            var now = (new Date()).getTime();
-
-                            if(now - previousTapTime <= opts.doubleTapTime) {
-                                eventSet.execute("doubletap", touches);
-                            }
-                            previousTapTime = now;
-                        }
-                        
-                        // pinchend
-                        if(touches.current.scale() !== 1.0) {
-                            var pinchDirection = touches.current.scale() < 1.0 ? "narrowed" : "widened";
-                            eventSet.execute("pinchend", touches, pinchDirection);
-                        }
-                    }
+                    detectTap();        // tap || doubletap
+                    detectSwipeFlick(); // swipe || flick         
+                    detectPinch();     // pinch || stretch 
                 }
                 lastTouches = 0; // for Android, can be always set to 0. 
             };

@@ -40,13 +40,18 @@ A small JavaScript library for easily recognising gestures on DOM elements on th
 Jester has the following gestures available for immediate use:
 
 jester(el).tap(handler);
-jester(el).doubletap(handler);
+jester(el).taplong(handler);     // the finger is pressed long onto the scree
+jester(el).twintap(handler);     // a tap with two fingers
+jester(el).twintaplong(handler); // a long tap with two fingers
+jester(el).doubletap(handler);   // double tap with one or more fingers
 jester(el).swipe(handler);
 jester(el).flick(handler);
 jester(el).pinch(handler);
 jester(el).pinchnarrow(handler);
 jester(el).pinchwiden(handler);
 jester(el).pinchend(handler);
+jester(el).pinched(handler);     // triggered when a user ends a narrowed pinch 
+jester(el).stretched(handler);   // triggered when a user ends a widened pinch
 
 All gesture handlers get passed in the Jester touches object.  The touches object has all the good data in it, like how far a touch has moved, how long its been held down and so on.  Read more about that below.
 Some of the handlers are also passed in a direction as their second parameter.  This is a string that describes the direction the gesture travelled.  For examples of how this works, see the included index.html file's source.
@@ -171,11 +176,14 @@ capture        Boolean   Whether or not to receive events on the capture phase.
 
 tapDistance    Integer   Maximum distance a finger is allowed to travel for a tap to be registered.
 tapTime        Integer   Maximum time a finger is allowed to have contact with the screen for a tap to be registered.
+tapLongTime    Integer   Minimum time one or two fingers are pressed on a single spot
 
 doubleTapTime  Integer   The maximum time between two taps to register as a double tap.
 
+avoidSwipe     Boolean   Whether or not to capture swipe events in order to catch only flicks 
 swipeDistance  Integer   The minimum distance a gesture must travel before a swipe is registered.
 
+avoidFlick     Boolean   Whether or not to capture flick events in order to catch only swipes
 flickTime      Integer   The maximum length of time a gesture can last for it to be registered as a flick.
 flickDistance  Integer   The minimum distance a gesture must travel for it to be registered as a flick.
 
