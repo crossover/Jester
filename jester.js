@@ -1,14 +1,14 @@
-/* 
+/*
  * Jester JavaScript Library v0.2
  * http://github.com/plainview/Jester
  *
  * Easy JavaScript gesture recognition.
- * 
+ *
  * Released under MIT License
  *
  * Copyright (C) 2011 by Scott Seaward
  * Copyright (C) 2012 by Christian Glahn (Android Support Extensions)
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
@@ -82,7 +82,7 @@
                 }
             }
 
-            // 
+            //
             if(!("eventSet" in elementCache) || !(elementCache["eventSet"] instanceof Jester.EventSet)) {
                 elementCache["eventSet"] = new Jester.EventSet(element);
             }
@@ -270,9 +270,9 @@
             opts.deadY          = opts.deadY                ||    0;
 
             if(opts.capture !== false) opts.capture = true;
-            if(typeof opts.preventDefault !== "undefined" && 
+            if(typeof opts.preventDefault !== "undefined" &&
                opts.preventDefault !== false) opts.preventDefault = true;
-            if(typeof opts.preventDefault !== "undefined" && 
+            if(typeof opts.preventDefault !== "undefined" &&
                opts.stopPropagation !== false) opts.stopPropagation = true;
 
             var eventSet = elementCache.eventSet;
@@ -283,12 +283,12 @@
             var lastTouches = 0;
 
             var touchStart = function(evt) {
-                // avoid that multiple touchstart events on Android devices 
+                // avoid that multiple touchstart events on Android devices
                 // confuse the gesture detection.
                 if ( lastTouches < evt.touches.length ) {
                     lastTouches = evt.touches.length;
-                   
-                    touches = new Jester.TouchGroup(evt);                    
+
+                    touches = new Jester.TouchGroup(evt);
                     eventSet.execute("start", touches, evt);
 
                     previousTapTime = (new Date()).getTime();
@@ -322,10 +322,10 @@
                 var nTouch = touches.numTouches();
                 var eTouch = true;
                 for(var i = 0; i < nTouch; i++ ) {
-                    if(!(touches.touch(i).total.x() <= opts.tapDistance && 
+                    if(!(touches.touch(i).total.x() <= opts.tapDistance &&
                          touches.touch(i).total.y() <= opts.tapDistance)) {
                         eTouch = false;
-                        break; 
+                        break;
                     }
                 }
                 if (eTouch) {
@@ -337,11 +337,11 @@
                         case 2:
                             eventSet.execute("twintap", touches);
                             break
-                        default: 
+                        default:
                             // event for multitaps
                             break;
                         }
-                        
+
                         // double tap
                         var now = (new Date()).getTime();
                         if((previousNumTouches == nTouch) &&
@@ -353,7 +353,7 @@
                             previousTapTime  = 0;
 
                         }
-                        else { 
+                        else {
                             // if a tap was detected but not triggered
                             // a double tap then we need to initialize
                             // the timer
@@ -369,7 +369,7 @@
                         case 2:
                             eventSet.execute("twintaplong", touches);
                             break
-                        default: 
+                        default:
                             // event for multitaps
                             break;
                         }
@@ -401,7 +401,7 @@
                         eventname = "swipe";
                     }
                     if (!opts.avoidFlick &&
-                        distance >= opts.flickDistance && 
+                        distance >= opts.flickDistance &&
                         touches.touch(0).total.time() <= opts.flickTime) {
                         eventname = "flick";
                     }
@@ -440,10 +440,10 @@
 
                 if ( lastTouches > 0 ) {
                     detectTap();        // tap || doubletap
-                    detectSwipeFlick(); // swipe || flick         
-                    detectPinch();     // pinch || stretch 
+                    detectSwipeFlick(); // swipe || flick
+                    detectPinch();     // pinch || stretch
                 }
-                lastTouches = 0; // for Android, can be always set to 0. 
+                lastTouches = 0; // for Android, can be always set to 0.
             };
 
             var stopListening = function() {
@@ -463,12 +463,12 @@
 
         TouchGroup : function(event) {
             var that = this;
-    
+
             var numTouches = event.touches.length;
-        
+
             var midpointX = 0;
             var midpointY = 0;
-            
+
             var prevTouches;
             var scale = event.scale || scaleHelper(event);
             var prevScale = scale;
@@ -507,7 +507,7 @@
             function updateTouches(event) {
                 var mpX = 0;
                 var mpY = 0;
-    
+
                 for(var i = 0; i < event.touches.length; i++) {
                     if(i < numTouches) {
                         that["touch" + i].update(event.touches[i].pageX, event.touches[i].pageY);
@@ -523,11 +523,11 @@
                 deltaScale = scale - prevScale;
                 that.event = event;
             }
-            
+
             function stopPropagation() {
                 this.event.stopPropagation();
             }
-            
+
             // Android devices do not automatically calculate the
             // scale of the touches in a gesture, while iOS does
             // so. This function mimics the iphone behavior.
@@ -536,16 +536,16 @@
             function sizeCalc(touchList) {
                 var _size = 0;
                 if ( touchList && touchList.length > 1 ) {
-                    var minX = touchList[0].pageX, 
-                    maxX = touchList[0].pageX, 
-                    minY = touchList[0].pageY, 
+                    var minX = touchList[0].pageX,
+                    maxX = touchList[0].pageX,
+                    minY = touchList[0].pageY,
                     maxY = touchList[0].pageY;
                     for ( var i = 0; i < touchList.length; i++ ) {
                         if ( touchList[i].pageX < minX )
                             minX = touchList[i].pageX;
                         if ( touchList[i].pageY < minY )
                             minY = touchList[i].pageY;
-                        if ( touchList[i].pageX > maxX ) 
+                        if ( touchList[i].pageX > maxX )
                             maxX = touchList[i].pageX;
                         if ( touchList[i].pageY > maxY )
                             maxY = touchList[i].pageY;
@@ -561,16 +561,16 @@
 
                 if ( prevTouches && prevTouches.length) {
                     if ( prevTouches.delta && event.touches.length > 1 ) {
-                        var dl = sizeCalc( event.touches ); 
+                        var dl = sizeCalc( event.touches );
                         _delta =  dl/prevTouches.delta;
                     }
                 }
                 else {
                     // the gesture delta needs to get calculated only
                     // when a gesture is started
-                    prevTouches = event.touches; 
+                    prevTouches = event.touches;
                     if ( prevTouches && prevTouches.length > 1 ) {
-                        var dl = sizeCalc( prevTouches ); 
+                        var dl = sizeCalc( prevTouches );
                         prevTouches.delta = dl;
                     }
                 }
@@ -747,7 +747,7 @@
                     currentSpeedX = deltaX / (deltaTime/1000);
                     currentSpeedY = deltaY / (deltaTime/1000);
                     deltaSpeedX = currentSpeedX - prevSpeedX;
-                    deltaSpeedY = currentSpeedY - prevSpeedY;    
+                    deltaSpeedY = currentSpeedY - prevSpeedY;
                 }
             }
         }
