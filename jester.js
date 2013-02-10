@@ -259,7 +259,7 @@
 
             opts.doubleTapTime  = opts.doubleTapTime        ||    300;
 
-            opts.avoidSwipe     = opts.avoidSwipt           ||    false;
+            opts.avoidSwipe     = opts.avoidSwipe           ||    false;
             opts.swipeDistance  = opts.swipeDistance        ||    200;
 
             opts.avoidFlick     = opts.avoidFlick           ||    false;
