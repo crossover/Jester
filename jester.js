@@ -389,8 +389,11 @@
             function detectSwipeFlick() {
                 var nTouch = touches.numTouches();
                 if (nTouch == 1) {
-                    var totalX   = touches.touch(0).total.x();
-                    var distance = Math.abs(totalX);
+                    var totalX    = touches.touch(0).total.x();
+                    var totalY    = touches.touch(0).total.y();
+                    var distanceX = Math.abs(totalX);
+                    var distanceY = Math.abs(totalY);
+                    var distance  = Math.max(distanceX, distanceY);
                     var eventname;
 
                     if (!opts.avoidSwipe &&
@@ -404,7 +407,12 @@
                     }
 
                     if (eventname) {
-                        eventSet.execute(eventname, touches, totalX < 0 ? "left" : "right");
+                        if (distanceX >= distanceY) {
+                            eventSet.execute(eventname, touches, totalX < 0 ? "left" : "right");
+                        }
+                        else {
+                            eventSet.execute(eventname, touches, totalY < 0 ? "up" : "down");
+                        }
                     }
                 }
             }
